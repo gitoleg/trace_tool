@@ -1,0 +1,9 @@
+B _build/lib/
+B _build/src
+S lib/
+S src/
+
+PKG core_kernel
+PKG cmdliner
+PKG bap
+PKG bap-traces

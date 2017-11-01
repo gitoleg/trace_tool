@@ -1,0 +1,28 @@
+OASISFormat:  0.4
+Name:         trace-tool
+Version:      0.1
+Synopsis:     Trace tool
+Authors:      BAP Team
+Maintainers:  Ivan Gotovchits <ivg@ieee.org>,
+              Oleg Kamenkov <forown@yandex.ru>
+License:      MIT
+Copyrights:   (C) 2016 Carnegie Mellon University
+Plugins:      META (0.4), DevFiles (0.4)
+BuildTools:   ocamlbuild
+BuildDepends: ppx_jane, core_kernel, bap, bap-traces
+
+Library trace_tool_lib
+  Path:           lib
+  FindLibName:    trace_tool_lib
+  Modules:        Trace_tool_helpers,
+                  Trace_tool_unique,
+                  Trace_tool_split
+  CompiledObject: best
+  Install:        true
+
+Executable "trace-tool"
+  Path:           src
+  MainIs:         trace_tool.ml
+  CompiledObject: best
+  Install:        true
+  BuildDepends:   findlib.dynload, bap.plugins, cmdliner, trace_tool_lib
