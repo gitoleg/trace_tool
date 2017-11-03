@@ -14,11 +14,12 @@ BuildDepends: ppx_jane, core_kernel, bap, bap-traces
 Library trace_tool_lib
   Path:           lib
   FindLibName:    trace_tool_lib
-  Modules:        Trace_tool_helpers,
-                  Trace_tool_unique,
-                  Trace_tool_split
+  Modules:        Trace_tool_filter,
+                  Trace_tool_helpers,
+                  Trace_tool_split,
+                  Trace_tool_unique
   CompiledObject: best
-  Install:        true
+  Install:        false
 
 Executable "trace-tool"
   Path:           src

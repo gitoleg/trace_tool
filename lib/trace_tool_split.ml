@@ -25,53 +25,37 @@ let name_of_chunk dis endian chunk =
     Some name
   | _ -> None
 
-let insn_group name = String.filter ~f:Char.is_uppercase name
-
 let insn_name dis endian frame =
   match List.find_map ~f:get_code frame with
   | None -> None
   | Some chunk ->
     name_of_chunk dis endian chunk
 
-let all_names file =
+let names trace =
   let names = String.Set.empty in
-  match trace_of_file file with
-  | None -> names
-  | Some trace ->
-    let arch = Option.value_exn (Dict.find (Trace.meta trace) Meta.arch) in
-    let endian = Arch.endian arch in
-    let dis = create_dis arch in
-    Seq.fold (Trace.read_events trace)
-      ~init:names
-      ~f:(fun names ev ->
-         match Value.get Event.code_exec ev with
-         | None -> names
-         | Some chunk ->
-           let name = name_of_chunk dis endian chunk in
-           Option.fold name ~init:names ~f:(fun names n ->
-               String.Set.add names (insn_group n)))
+  let arch = Option.value_exn (Dict.find (Trace.meta trace) Meta.arch) in
+  let endian = Arch.endian arch in
+  let dis = create_dis arch in
+  Seq.fold (Trace.read_events trace)
+    ~init:names
+    ~f:(fun names ev ->
+        match Value.get Event.code_exec ev with
+        | None -> names
+        | Some chunk ->
+          let name = name_of_chunk dis endian chunk in
+          Option.fold name ~init:names ~f:(fun names n ->
+              String.Set.add names n))
 
-let filter_by_name dis endian trace name =
+let filter_by_name ?f trace name =
+  let arch = Option.value_exn (Dict.find (Trace.meta trace) Meta.arch) in
+  let endian = Arch.endian arch in
+  let dis = create_dis arch in
+  let filter_name = match f with
+    | Some f -> f
+    | None -> fun insn_name -> String.equal name insn_name in
   let filter f =
     insn_name dis endian f |>
-    Option.value_map ~default:false ~f:(fun n -> insn_group n = name) in
+    Option.value_map ~default:false ~f:filter_name in
   let fs = make_frames ~is_good_enough:filter trace in
   let fresh = Trace.create (Trace.tool trace) (make_unfold fs) in
   Trace.set_meta fresh (Trace.meta trace)
-
-let run file =
-  if Sys.is_directory file then
-    let () = eprintf "%s should be regular file\n" file in
-    exit 1
-  else
-    let save_i name =
-      match trace_of_file file with
-      | None -> eprintf "something went wrong with %s\n" file;
-      | Some trace ->
-        let arch = Option.value_exn (Dict.find (Trace.meta trace) Meta.arch) in
-        let endian = Arch.endian arch in
-        let dis = create_dis arch in
-        let trace = filter_by_name dis endian trace name in
-        save_trace trace name in
-    let names = all_names file in
-    Set.iter ~f:(fun n -> save_i n) names

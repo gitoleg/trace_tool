@@ -22,6 +22,7 @@ let name_of_trace trace =
     Some (Filename.basename p)
 
 let all_good _ = true
+
 let is_pc_update = Value.is Event.pc_update
 let is_code_exec = Value.is Event.code_exec
 

@@ -2,18 +2,33 @@ open Core_kernel.Std
 open Bap.Std
 open Bap_traces.Std
 
-open Trace_tool_helpers
 
-module Filter : sig
+(** Normalization:
+    - no matter what the address is in memory load/store events
+    - no matter what address is contained in some register
+    - no matter what register is used for read/write events
+    What does matter is what flags are used and what value are
+    stored/loaded, wrote/read. And instruction (bytes) itself
+    ofcourse.
 
-  type t = (frame -> bool)
+    Uniqueness:
+    Frame is unique if there weren't any frame before,
+    (for given instruction) whoose normalized form is the same
+    as current frame's form.
 
-  val enough_n : int -> t
-  val each_nth : int -> t
+    Flags writes uniqueness is based on side effects of flags.
+    Frame is unique in this case if there weren't any frame
+    before (for given instruction), whoose flags writes were
+    the same.
 
-end
+*)
 
-(** [create ?is_good_enough trace] - return trace,
-    with unique frames. [is_good_enough] could be used to
-    constraing an occurrence of frames in trace  *)
-val create : ?is_good_enough:(frame -> bool) -> trace -> trace
+type t = [
+  | `Normalized
+  | `Flags_reads
+  | `Flags_writes
+  | `Bytes
+]
+
+(** [create trace] - return trace with unique frames. *)
+val create : t -> trace -> trace
