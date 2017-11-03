@@ -5,7 +5,7 @@ open Bap_traces.Std
 
 (** Normalization:
     - no matter what the address is in memory load/store events
-    - no matter what address is contained in some register
+    - no matter what address is contained in any register
     - no matter what register is used for read/write events
     What does matter is what flags are used and what value are
     stored/loaded, wrote/read. And instruction (bytes) itself

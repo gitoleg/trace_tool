@@ -101,7 +101,7 @@ module U(CPU : CPU) = struct
   let filter_frame ~f frame =
     List.filter_map ~f:(fun e ->
         if Value.is Event.code_exec e then Some (nullify_addr e)
-        else Option.some_if ~f e) frame
+        else Option.some_if (f e) e) frame
 
   let checked_event tag f e =
     match Value.get tag e with
@@ -111,7 +111,7 @@ module U(CPU : CPU) = struct
   let filter_flags_writes frame =
     filter_frame ~f:(checked_event Event.register_write is_flag) frame
 
-  let filter_flags_writes frame =
+  let filter_flags_reads frame =
     filter_frame ~f:(checked_event Event.register_read is_flag) frame
 
   let is_unique_flags_writes frame =
@@ -122,11 +122,10 @@ module U(CPU : CPU) = struct
 
   let is_unique_bytes frame =
     match List.find ~f:(Value.is Event.code_exec) frame with
-    | None -> true
+    | None -> false
     | Some ev ->
       let ch = Value.get_exn Event.code_exec ev in
-      let code = Chunk.data ch in
-      String.Table.add unique_bytes code () = `Ok
+      String.Table.add unique_bytes (Chunk.data ch) () = `Ok
 
 end
 
